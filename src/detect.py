@@ -21,6 +21,7 @@ class BoxInfo:
 		self.width = width
 		self.height = height
 		self.confidence = confidence
+		self.person_info = None
 
 
 class FrameInfo:
@@ -125,6 +126,7 @@ def detect_person_info(croped_frame: np.ndarray) -> Optional[Tuple[float, int, s
 				person_info = confidence, analysis["age"], analysis["dominant_gender"], analysis["dominant_race"]
 				if max_confidence_person_info is None or max_confidence_person_info[0] < confidence:
 					max_confidence_person_info = person_info
+				return person_info
 
 			except Exception as e:
 				print(e)
@@ -135,7 +137,8 @@ def detect_person_info(croped_frame: np.ndarray) -> Optional[Tuple[float, int, s
 
 def process_shoplifting_box(frame, x, y, w, h, confidence, frame_info):
 	box = BoxInfo(x, y, w, h, confidence)
-	box.person_info = detect_person_info(frame[y: y + h, x: x + w])
+	cropped_frame = frame[y: y + h, x: x + w]
+	box.person_info = detect_person_info(cropped_frame)
 	frame_info.shoplifting_boxes.append(box)
 
 
