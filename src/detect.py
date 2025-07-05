@@ -1,5 +1,6 @@
 import argparse
 import cv2
+import face_recognition
 import imutils
 import math
 import numpy as np
@@ -7,11 +8,21 @@ import os
 import torch
 
 from deepface import DeepFace
+from PIL import Image
 from typing import Optional, Tuple
 from ultralytics import YOLO
 
 first_slowmo_frame = None
 last_slowmo_frame = None
+
+horns_path = "../data/horns.png"
+horns = Image.open(horns_path).convert("RGBA")
+
+
+class HornInfo:
+	def __init__(self, box_local_position, resized_image):
+		self.box_local_position = box_local_position
+		self.resized_image = resized_image
 
 
 class BoxInfo:
@@ -22,6 +33,7 @@ class BoxInfo:
 		self.height = height
 		self.confidence = confidence
 		self.person_info = None
+		self.horn_infos = []
 
 
 class FrameInfo:
@@ -76,6 +88,18 @@ def write_video(output_video, frame_infos):
 			cv2.rectangle(frame_info.modified_frame, (box_info.x1, box_info.y1),
 			              (box_info.x1 + box_info.width, box_info.y1 + box_info.height), (0, 0, 255), 2)
 
+		rgb_frame = cv2.cvtColor(frame_info.modified_frame, cv2.COLOR_BGR2RGB)
+		frame_image = Image.fromarray(rgb_frame)
+
+		for box_info in frame_info.shoplifting_boxes:
+			for horn_info in box_info.horn_infos:
+				frame_image.paste(horn_info.resized_image,
+				                  (box_info.x1 + horn_info.box_local_position[0],
+				                   box_info.y1 + horn_info.box_local_position[1]),
+				                  horn_info.resized_image)
+
+		frame_info.modified_frame = cv2.cvtColor(np.array(frame_image), cv2.COLOR_RGB2BGR)
+
 		if max_confidence_person_info is not None:
 			cv2.putText(frame_info.modified_frame,
 			            "Suspect",
@@ -109,10 +133,10 @@ def write_video(output_video, frame_infos):
 	cv2.destroyWindow("Generating output...")
 
 
-def detect_person_info(croped_frame: np.ndarray) -> Optional[Tuple[float, int, str, str]]:
+def detect_person_info(cropped_frame: np.ndarray) -> Optional[Tuple[float, int, str, str]]:
 	global max_confidence_person_info
 
-	results = person_info_model(croped_frame, classes=[0])
+	results = person_info_model(cropped_frame, classes=[0])
 
 	for result in results:
 		boxes = result.boxes.cpu().numpy()
@@ -122,7 +146,7 @@ def detect_person_info(croped_frame: np.ndarray) -> Optional[Tuple[float, int, s
 			confidence = float(box.conf[0])
 
 			try:
-				analysis = DeepFace.analyze(croped_frame, actions=['age', 'gender', 'race'], enforce_detection=True)[0]
+				analysis = DeepFace.analyze(cropped_frame, actions=['age', 'gender', 'race'], enforce_detection=True)[0]
 				person_info = confidence, analysis["age"], analysis["dominant_gender"], analysis["dominant_race"]
 				if max_confidence_person_info is None or max_confidence_person_info[0] < confidence:
 					max_confidence_person_info = person_info
@@ -135,10 +159,43 @@ def detect_person_info(croped_frame: np.ndarray) -> Optional[Tuple[float, int, s
 	return None
 
 
+def get_horn_infos(cropped_frame):
+	result = []
+
+	rgb_frame = cv2.cvtColor(cropped_frame, cv2.COLOR_BGR2RGB)
+
+	face_landmarks_list = face_recognition.face_landmarks(rgb_frame)
+
+	for landmarks in face_landmarks_list:
+		left_eye = landmarks["left_eye"]
+		right_eye = landmarks["right_eye"]
+
+		left_x = sum([p[0] for p in left_eye]) / len(left_eye)
+		right_x = sum([p[0] for p in right_eye]) / len(right_eye)
+		left_y = sum([p[1] for p in left_eye]) / len(left_eye)
+		right_y = sum([p[1] for p in right_eye]) / len(right_eye)
+
+		center_x = int((left_x + right_x) / 2)
+
+		face_width = int(abs(right_x - left_x) * 2)
+
+		horns_width = int(face_width * 1.3)
+		horns_height = int(horns_width * horns.height / horns.width)
+
+		horns_x = center_x - horns_width // 2
+		horns_y = int(min(left_y, right_y)) - horns_height  # + 10
+		horns_resized = horns.resize((horns_width, horns_height))
+
+		result.append(HornInfo((horns_x, horns_y), horns_resized))
+
+	return result
+
+
 def process_shoplifting_box(frame, x, y, w, h, confidence, frame_info):
 	box = BoxInfo(x, y, w, h, confidence)
 	cropped_frame = frame[y: y + h, x: x + w]
 	box.person_info = detect_person_info(cropped_frame)
+	box.horn_infos = get_horn_infos(cropped_frame)
 	frame_info.shoplifting_boxes.append(box)
 
 
