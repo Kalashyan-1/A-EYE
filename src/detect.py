@@ -1,6 +1,7 @@
 import argparse
 import cv2
 import imutils
+import math
 import numpy as np
 import os
 import torch
@@ -8,6 +9,9 @@ import torch
 from deepface import DeepFace
 from typing import Optional, Tuple
 from ultralytics import YOLO
+
+first_slowmo_frame = None
+last_slowmo_frame = None
 
 
 class BoxInfo:
@@ -88,14 +92,14 @@ def write_video(output_video, frame_infos):
 			            cv2.FONT_HERSHEY_SIMPLEX, 1.0,
 			            (0, 0, 255), 2)
 			cv2.putText(frame_info.modified_frame,
-			            f"Race = {max_confidence_person_info[3]}",
+			            f"Race {max_confidence_person_info[3]}",
 			            (60, 120),
 			            cv2.FONT_HERSHEY_SIMPLEX, 1.0,
 			            (0, 0, 255), 2)
 
 		output_video.write(frame_info.modified_frame)
 		if frame_info.is_slowmo:
-			for _ in range(9):
+			for _ in range(2):
 				output_video.write(frame_info.modified_frame)
 
 		cv2.imshow("Generating output...", frame_info.modified_frame)
@@ -154,6 +158,9 @@ def process_frame(frame, frame_info):
 
 
 def process_video(video):
+	global first_slowmo_frame
+	global last_slowmo_frame
+
 	result = []
 
 	while True:
@@ -164,6 +171,12 @@ def process_video(video):
 		frame_info = FrameInfo(frame)
 		frame = process_frame(frame, frame_info)
 		frame_info.modified_frame = frame
+
+		if frame_info.shoplifting_boxes:
+			frame_index = len(result)
+			if first_slowmo_frame is None:
+				first_slowmo_frame = frame_index
+			last_slowmo_frame = frame_index
 
 		result.append(frame_info)
 		cv2.imshow("Processing...", frame)
@@ -184,6 +197,13 @@ def main():
 	frame_infos = process_video(video)
 	if not frame_infos:
 		raise ValueError("no frames found")
+
+	if first_slowmo_frame is not None:
+		slowmo_start = max(0, first_slowmo_frame - int(math.ceil(fps)))
+		slowmo_end = min(len(frame_infos), last_slowmo_frame + int(math.ceil(fps)))
+
+		for frame_index in range(slowmo_start, slowmo_end):
+			frame_infos[frame_index].is_slowmo = True
 
 	output_video = create_video(args.output, fps,
 	                            (frame_infos[0].modified_frame.shape[0], frame_infos[0].modified_frame.shape[1]))
