@@ -103,23 +103,23 @@ def write_video(output_video, frame_infos):
 		if max_confidence_person_info is not None:
 			cv2.putText(frame_info.modified_frame,
 			            "Suspect",
-			            (30, 30),
-			            cv2.FONT_HERSHEY_SIMPLEX, 1.0,
+			            (20, 20),
+			            cv2.FONT_HERSHEY_SIMPLEX, 0.6,
 			            (0, 0, 255), 2)
 			cv2.putText(frame_info.modified_frame,
 			            f"Age {max_confidence_person_info[1]}",
-			            (60, 60),
-			            cv2.FONT_HERSHEY_SIMPLEX, 1.0,
+			            (40, 40),
+			            cv2.FONT_HERSHEY_SIMPLEX, 0.6,
 			            (0, 0, 255), 2)
 			cv2.putText(frame_info.modified_frame,
 			            f"Gender {max_confidence_person_info[2]}",
-			            (60, 90),
-			            cv2.FONT_HERSHEY_SIMPLEX, 1.0,
+			            (40, 60),
+			            cv2.FONT_HERSHEY_SIMPLEX, 0.6,
 			            (0, 0, 255), 2)
 			cv2.putText(frame_info.modified_frame,
 			            f"Race {max_confidence_person_info[3]}",
-			            (60, 120),
-			            cv2.FONT_HERSHEY_SIMPLEX, 1.0,
+			            (40, 80),
+			            cv2.FONT_HERSHEY_SIMPLEX, 0.6,
 			            (0, 0, 255), 2)
 
 		output_video.write(frame_info.modified_frame)
