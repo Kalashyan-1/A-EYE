@@ -15,7 +15,7 @@ from ultralytics import YOLO
 first_slowmo_frame = None
 last_slowmo_frame = None
 
-horns_path = "../data/horns.png"
+horns_path = "data/horns.png"
 horns = Image.open(horns_path).convert("RGBA")
 
 
@@ -56,8 +56,8 @@ def load_yolo_model(weights_path):
 	return result
 
 
-shoplifting_detection_model = load_yolo_model("../data/shoplifting.pt")
-person_info_model = load_yolo_model("../data/yolov8n_person_detection.pt")
+shoplifting_detection_model = load_yolo_model("data/shoplifting.pt")
+person_info_model = load_yolo_model("data/yolov8n_person_detection.pt")
 
 
 def create_parser():
