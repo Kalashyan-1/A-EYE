@@ -121,6 +121,12 @@ def write_video(output_video, frame_infos):
 			            (40, 80),
 			            cv2.FONT_HERSHEY_SIMPLEX, 0.6,
 			            (0, 0, 255), 2)
+		else:
+			cv2.putText(frame_info.modified_frame,
+			            "No suspects",
+			            (20, 20),
+			            cv2.FONT_HERSHEY_SIMPLEX, 0.6,
+			            (0, 0, 255), 2)
 
 		output_video.write(frame_info.modified_frame)
 		if frame_info.is_slowmo:
