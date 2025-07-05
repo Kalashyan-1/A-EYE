@@ -70,12 +70,6 @@ def write_video(output_video, frame_infos):
 		for box_info in frame_info.shoplifting_boxes:
 			cv2.rectangle(frame_info.modified_frame, (box_info.x1, box_info.y1),
 			              (box_info.x1 + box_info.width, box_info.y1 + box_info.height), (0, 0, 255), 2)
-		center_x = int(box_info.x1 + box_info.width / 2)
-		cv2.circle(frame_info.modified_frame, (center_x, box_info.y1), 6, (0, 255, 255), -1)
-		confidence_text = f"{np.round(box_info.confidence * 100, 2)}%"
-		cv2.putText(frame_info.modified_frame, confidence_text, (box_info.x1 + 10, box_info.y1 - 10),
-		            cv2.FONT_HERSHEY_SIMPLEX, 1.0,
-		            (0, 0, 255), 2)
 
 		if max_confidence_person_info is not None:
 			cv2.putText(frame_info.modified_frame,
