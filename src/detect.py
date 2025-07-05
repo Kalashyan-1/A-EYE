@@ -9,17 +9,18 @@ from ultralytics import YOLO
 from typing import Optional, Tuple
 from deepface import DeepFace
 
-
 writer = None
 slow_down_ranges = []  # Initialize list to track slow-down ranges
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
 
 def load_yolov8_model(weights_path):
 	if not os.path.exists(weights_path):
 		raise FileNotFoundError(f"model weights not found at: {weights_path}")
 	result = YOLO(weights_path).to(device)
 	return result
+
 
 shoplifting_detection_model = load_yolov8_model("../data/shoplifting.pt")
 person_info_model = load_yolov8_model("../data/yolov8n_person_detection.pt")
@@ -40,7 +41,8 @@ def load_video(path):
 		raise IOError("couldn't open webcam or video")
 	return result
 
-def detect_person_info(croped_frame:np.ndarray) -> Optional[Tuple[float, int, str, str]]:
+
+def detect_person_info(croped_frame: np.ndarray) -> Optional[Tuple[float, int, str, str]]:
 	results = person_info_model(croped_frame, classes=[0])
 
 	for result in results:
@@ -52,7 +54,7 @@ def detect_person_info(croped_frame:np.ndarray) -> Optional[Tuple[float, int, st
 
 			try:
 				analysis = DeepFace.analyze(croped_frame, actions=['age', 'gender', 'race'], enforce_detection=True)[0]
-				#analysis = DeepFace.analyze(
+				# analysis = DeepFace.analyze(
 				#    img_path=croped_frame,
 				#    actions=['age', 'gender', 'race'],
 				#    models={
@@ -61,11 +63,11 @@ def detect_person_info(croped_frame:np.ndarray) -> Optional[Tuple[float, int, st
 				#        'race': race_model
 				#    },
 				#    enforce_detection=True
-				#)[0]
-				#conf_percent = round(conf * 100, 1)
-				#age = analysis["age"]
-				#gender = analysis["dominant_gender"]
-				#race = analysis["dominant_race"]
+				# )[0]
+				# conf_percent = round(conf * 100, 1)
+				# age = analysis["age"]
+				# gender = analysis["dominant_gender"]
+				# race = analysis["dominant_race"]
 
 				return (conf, analysis["age"], analysis["dominant_gender"], analysis["dominant_race"])
 
@@ -75,13 +77,14 @@ def detect_person_info(croped_frame:np.ndarray) -> Optional[Tuple[float, int, st
 
 	return None
 
+
 def draw_shoplifting_box(frame, x, y, w, h, confidence, person_infos):
 	cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 255, 0), 2)
 	center_x = int(x + w / 2)
 	cv2.circle(frame, (center_x, y), 6, (0, 0, 255), -1)
 	conf_text = f"{np.round(confidence * 100, 2)}%"
 	cv2.putText(frame, conf_text, (x + 10, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
-	person_info = detect_person_info(frame[y : y + h, x : x + w])
+	person_info = detect_person_info(frame[y: y + h, x: x + w])
 	if person_info:
 		person_infos.append(person_info)
 
@@ -100,33 +103,36 @@ def draw_shoplifting_prediction(prediction, frame, person_infos, frame_count):
 			draw_shoplifting_box(frame, x1, y1, w, h, confidence, person_infos)
 
 	if status:
-		start =  max(0, frame_count - 70)
+		start = max(0, frame_count - 70)
 		end = frame_count + 25
 		new_range = (start, end)
 		if should_add_range(new_range, slow_down_ranges):
 			slow_down_ranges.append(new_range)
 			slow_down_ranges = merge_ranges(slow_down_ranges)
 
+
 def merge_ranges(ranges):
-    if not ranges:
-        return []
-    ranges.sort()
-    merged = [ranges[0]]
-    for current in ranges[1:]:
-        prev_start, prev_end = merged[-1]
-        curr_start, curr_end = current
-        if curr_start <= prev_end:
-            merged[-1] = (prev_start, max(prev_end, curr_end))
-        else:
-            merged.append(current)
-    return merged
+	if not ranges:
+		return []
+	ranges.sort()
+	merged = [ranges[0]]
+	for current in ranges[1:]:
+		prev_start, prev_end = merged[-1]
+		curr_start, curr_end = current
+		if curr_start <= prev_end:
+			merged[-1] = (prev_start, max(prev_end, curr_end))
+		else:
+			merged.append(current)
+	return merged
+
 
 def should_add_range(new_range, existing_ranges):
-    new_start, new_end = new_range
-    for start, end in existing_ranges:
-        if not (new_end < start or new_start > end):  # Overlaps
-            return False
-    return True
+	new_start, new_end = new_range
+	for start, end in existing_ranges:
+		if not (new_end < start or new_start > end):  # Overlaps
+			return False
+	return True
+
 
 def draw_shoplifting_predictions(predictions, frame, person_infos, frame_count):
 	for prediction in predictions:
@@ -146,7 +152,7 @@ def setup_video_writer(frame: np.ndarray, output_path: str) -> None:
 	if output_path and writer is None:
 		fourcc = cv2.VideoWriter_fourcc(*"MJPG")
 		writer = cv2.VideoWriter(output_path, fourcc, 25,
-									(frame.shape[1], frame.shape[0]), True)
+		                         (frame.shape[1], frame.shape[0]), True)
 
 
 def process_video(video, out_path):
@@ -194,7 +200,3 @@ if __name__ == "__main__":
 		print(f"error: {str(e)}")
 	except:
 		print("error: unexpected error")
-
-
-
-
