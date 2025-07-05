@@ -51,7 +51,7 @@ max_confidence_person_info = None
 
 def load_yolo_model(weights_path):
 	if not os.path.exists(weights_path):
-		raise FileNotFoundError(f"model weights not found at: {weights_path}")
+		raise FileNotFoundError(f"մոդելի քաշերը չգտնվեցին: {weights_path}")
 	result = YOLO(weights_path).to(device)
 	return result
 
@@ -62,17 +62,17 @@ person_info_model = load_yolo_model("../data/yolov8n_person_detection.pt")
 
 def create_parser():
 	parser = argparse.ArgumentParser()
-	parser.add_argument('-i', '--input', required=True, help="Path to input video file")
-	parser.add_argument('-o', '--output', required=True, help="Path to output video file")
+	parser.add_argument('-i', '--input', required=True, help="Մուտքային տեսաձայնագրության ֆայլի ճանապարհը")
+	parser.add_argument('-o', '--output', required=True, help="Ելքային տեսաձայնագրության ֆայլի ճանապարհը")
 	return parser
 
 
 def load_video(path):
 	if not os.path.exists(path):
-		raise FileNotFoundError(f"video not found at: {path}")
+		raise FileNotFoundError(f"տեսաձայնագրությունը չի գտնվել: {path}")
 	result = cv2.VideoCapture(path)
 	if not result.isOpened():
-		raise IOError("couldn't open webcam or video")
+		raise IOError("չստացվեց բացել տեսաձայնագրությունը")
 	return result
 
 
@@ -256,7 +256,7 @@ def main():
 
 	frame_infos = process_video(video)
 	if not frame_infos:
-		raise ValueError("no frames found")
+		raise ValueError("կադրեր չեն գտնվել")
 
 	if first_slowmo_frame is not None:
 		slowmo_start = max(0, first_slowmo_frame - int(math.ceil(fps)))
@@ -274,6 +274,6 @@ if __name__ == "__main__":
 	try:
 		main()
 	except Exception as e:
-		print(f"error: {str(e)}")
+		print(f"սխալ: {str(e)}")
 	except:
-		print("error: unexpected error")
+		print("սխալ: չսպասված սխալ")
