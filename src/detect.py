@@ -183,7 +183,7 @@ def get_horn_infos(cropped_frame):
 		horns_height = int(horns_width * horns.height / horns.width)
 
 		horns_x = center_x - horns_width // 2
-		horns_y = int(min(left_y, right_y)) - horns_height  # + 10
+		horns_y = int(min(left_y, right_y)) - horns_height - 10  # + 10
 		horns_resized = horns.resize((horns_width, horns_height))
 
 		result.append(HornInfo((horns_x, horns_y), horns_resized))
