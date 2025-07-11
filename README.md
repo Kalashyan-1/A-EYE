@@ -1,8 +1,9 @@
-# 🧠 A-EYE: Intelligent Surveillance System
+# 🧠 A-EYE Surveillance System
 
-**A-EYE** is a smart surveillance solution designed to detect suspicious behavior and identify potential thieves in real-time using computer vision and AI. It also predicts the **age**, **gender**, and **race** of individuals based on facial analysis to aid in better profiling and threat assessment.
+![](data/logo.gif)
 
-![]()
+
+**A-EYE** is an intelligent surveillance system that uses computer vision and AI to detect suspicious behavior and identify potential thieves in real-time. It performs facial analysis to estimate **age**, **gender**, and **race** for enhanced profiling and threat assessment. Additionally, **A-EYE** provides customer analytics, including satisfaction insights.
 
 ---
 
@@ -11,7 +12,6 @@
 - 👁️ Real-time detection of **suspicious behavior**
 - 🕵️ Identification of **potential thieves**
 - 🧓 Age, 👩 Gender, and 🌍 Race prediction via facial recognition
-- 📹 Integration with camera feeds for live monitoring
 - 🧠 Powered by state-of-the-art AI and deep learning models
 
 ---
@@ -27,45 +27,42 @@
 
 ## 🛠️ Tech Stack
 
-- Python (OpenCV, TensorFlow/PyTorch)
-- Deep Learning for behavior and face analysis
-- REST API / WebSocket for integration
-- (Optional) Frontend dashboard for visualization
+- YOLOv8
+- Python
+- OpenCV
+- TensorFlow
+- PyTorch
+- Matplotlib
+- DeepFace
 
 
 
 ## 🧱 System Architecture
 
 ```text
-┌────────────┐     ┌─────────────┐     ┌────────────────┐
-│ Video Feed │──▶▶│ Preprocessor│──▶▶│ Person Tracker │
-└────────────┘     └─────────────┘     └────────────────┘
-    │                    │                     │
-    ▼                    ▼                     ▼
-Source from      Frame resizing,       Detects and assigns
-camera or file   FPS control,          unique IDs to each
-(RTSP, MP4, etc) background blur,      person across frames
-                 ROI masking
-
-                            ┌─────────────┴───────────────┐
-                            ▼                             ▼
-                  ┌────────────────┐             ┌────────────────────┐
-                  │ Behavior Model │             │ Face Detection     │
-                  │ (CNN + LSTM)   │             │ + Demographic Model│
-                  └────────────────┘             └────────────────────┘
-                          ▲                               ▲
+┌────────────┐     ┌─────────────┐   
+│ Video Feed │──▶▶│ Preprocessor│
+└────────────┘     └─────────────┘
+    │                    │        
+    ▼                    ▼        
+Source from      Frame resizing,  
+camera or file   FPS control      
+(MP4, etc)                        
+                 
+          ┌─────────────┴───────────────┐
+          ▼                             ▼
+    ┌────────────────┐             ┌────────────────────┐
+    │ Behavior Model │             │ Face Detection     │
+    │ (CNN + LSTM)   │             │ + Demographic Model│
+    └────────────────┘             └────────────────────┘
+                ▲                               ▲
     Spatio-temporal motion patterns         Aligned face crops sent to
     analyzed for suspicious cues            deep learning model for:
     like loitering, quick grabs,            - Age group estimation  
     sudden direction changes, etc.          - Gender classification  
                                             - Race prediction
 
-                            ▼                             ▼
-                          Output         ◀────────────▶  Profiling
-                          Alerts / Logs / Visualization
-                          Suspicion score, demographics,
-                          visual overlays, and optional
-                          REST API integration
+                         
 ```
 
 ---
